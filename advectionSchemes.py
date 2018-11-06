@@ -46,7 +46,7 @@ def FTBS(phiOld, c, nt):
         # to cope with periodic boundary conditions
         for j in range(nx):
             phi[j] = phiOld[j] - c*\
-                     (phiOld[(j)%nx] - phiOld[(j-1)%nx])
+                     (phiOld[j] - phiOld[j-1])
 
         # update arrays for next time-step
         phiOld = phi.copy()
@@ -87,13 +87,12 @@ def BTCS(phiOld, c, nt):
         matrix[j][j]=1
         matrix[(j+1)%(nx)][j]=-c/2
         matrix[(j-1)%(nx)][j]=c/2
-    inversematrix = np.linalg.inv(matrix)
     # new time-step array for phi
     phi = phiOld.copy()
 
     # BTCS for each time-step
     for j in range(nt):
-        phi = inversematrix@phiOld
+        phi = np.linalg.solve(matrix, phiOld) #this would be the same as phi = inversematrix@phiOld, but is less expensive than inverting matrix M
         # update arrays for next time-step
         phiOld = phi.copy()
 
