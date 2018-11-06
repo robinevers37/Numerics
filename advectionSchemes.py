@@ -1,13 +1,6 @@
-# Numerical schemes for simulating linear advection for outer code
-# linearAdvect.py
-
-# If you are using Python 2.7 rather than Python 3, import various
-# functions from Python 3 such as to use real number division
-# rather than integer division. ie 3/2  = 1.5  rather than 3/2 = 1
-#from __future__ import absolute_import, division, print_function
-
 # The numpy package for numerical functions and pi
 import numpy as np
+from math import floor
 
 def FTCS(phiOld, c, nt):
     "Linear advection of profile in phiOld using FTCS, Courant number c"
@@ -96,4 +89,25 @@ def BTCS(phiOld, c, nt):
         # update arrays for next time-step
         phiOld = phi.copy()
 
+    return phi
+
+def CLI(beta, phi, k): #cubic lagrangian interpolation where f(x)=phi[x]
+    nx= len(phi)
+    phiNewj = -1/6*beta*(1-beta)*(2-beta)*phi[(k-1)%nx]+1/2*(1+beta)*(1-beta)*(2-beta)*phi[k%nx]+\
+        1/2*(1+beta)*beta*(2-beta)*phi[(k+1)%nx]-1/6*(1+beta)*beta*(1-beta)*phi[(k+2)%nx]
+    return phiNewj
+
+def SL(phiOld, c, nt):
+    "Linear advection of profile in puiOld using Semi-Lagrangian, courant number c"
+    "for nt time-steps"
+
+    nx = len(phiOld)
+    phi= phiOld.copy()
+    #Semi Legrangian for each time-step
+    for t in range(nt):
+        for j in range(nx):
+            k = floor(j-c) %nx
+            beta = (j-c-k)%nx
+            phi[j] = CLI(beta,phiOld,k) #Lagrangian interpolation using x_(k-1),x_k,x_(k+1),x_(k+2)
+        phiOld=phi.copy()
     return phi

@@ -53,7 +53,7 @@ def main():
     phiAnalytic = cosBell((x - c*nt*dx)%(xmax - xmin), 0, 0.75)
 
     # Advect the profile using finite difference for all the time steps
-    phiFTCS = FTCS(phiOld.copy(), c, nt)
+    phiFTCS = SL(phiOld.copy(), c, nt)
 
     # Calculate and print out error norms
     print("FTCS l2 error norm = ", l2ErrorNorm(phiFTCS, phiAnalytic))
@@ -74,7 +74,7 @@ def main():
     plt.legend(bbox_to_anchor=(1.15 , 1.1))
     plt.xlabel('$x$')
     input('press return to save file and continue')
-    plt.savefig('BTCS.pdf')
+    plt.savefig('SL.pdf')
 
 ### Run the function main defined in this file                      ###
 main()
