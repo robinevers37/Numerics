@@ -1,30 +1,5 @@
-#!/usr/bin/python3
-
-# Outer code for setting up the linear advection problem on a uniform
-# grid and calling the function to perform the linear advection and plot.
-
-### Copy out most of this code. Code commented with 3#s (like this) ###
-### is here to help you to learn python and need not be copied      ###
-
-### The command at the top means that this python function can be  ###
-### run directly from the command line (you will also need to do   ###
-### "chmod u+x linearAdvect.py" in unix or linux and then execute: ###
-### ./linearAdvect.py                                              ###
-
-### Note that blocks are defined by indentation in Python. You     ###
-### should never mix tabs and spaces for indentation - use 4 spaces.###
-### Setup your text editor to insert 4 spaces when you press tab    ###
-
-### If you are using Python 2.7 rather than Python 3, import various###
-### functions from Python 3 such as to use real number division     ###
-### rather than integer division. ie 3/2  = 1.5  rather than 3/2 = 1###
-#from __future__ import absolute_import, division, print_function
-
-### The matplotlib package contains plotting functions              ###
 import matplotlib.pyplot as plt
 
-# read in all the linear advection schemes, initial conditions and other
-# code associated with this application
 from initialConditions import *
 from advectionSchemes import *
 from diagnostics import *
@@ -49,32 +24,118 @@ def main():
 
     # Initial conditions
     phiOld = cosBell(x, 0, 0.75)
+    phiOldSquare = squareWave(x, 0, 0.75)
     # Exact solution is the initial condition shifted around the domain
     phiAnalytic = cosBell((x - c*nt*dx)%(xmax - xmin), 0, 0.75)
+    phiAnalyticSquare = squareWave((x - c*nt*dx)%(xmax - xmin), 0, 0.75)
+    # Exact solution
+    phiExact = np.zeros((nt,nx))
+    for t in range(nt):
+        phiExact[t] = cosBell((x - c*t*dx)%(xmax - xmin), 0, 0.75)
+    phiExactSquare = np.zeros((nt,nx))
+    for t in range(nt):
+        phiExactSquare[t] = squareWave((x - c*t*dx)%(xmax - xmin), 0, 0.75)
 
-    # Advect the profile using finite difference for all the time steps
-    phiFTCS = SL(phiOld.copy(), c, nt)
+    # Advect the profile using finite difference for all the time steps for inital bell curve
+    phiFTBS, errorFTBS = FTBS(phiExact, phiOld.copy(), c, nt)
+    phiBTCS, errorBTCS = BTCS(phiExact, phiOld.copy(), c, nt)
+    phiCTCS, errorCTCS = CTCS(phiExact, phiOld.copy(), c, nt)
+    phiSL, errorSL = SL(phiExact, phiOld.copy(), c, nt)
+
+    # Advect the profile using finite difference for all the time steps for sqare wave initial
+    phiFTBSSquare, errorFTBSSquare = FTBS(phiExactSquare, phiOldSquare.copy(), c, nt)
+    phiBTCSSquare, errorBTCSSquare = BTCS(phiExactSquare, phiOldSquare.copy(), c, nt)
+    phiCTCSSquare, errorCTCSSquare = CTCS(phiExactSquare, phiOldSquare.copy(), c, nt)
+    phiSLSquare, errorSLSquare = SL(phiExactSquare, phiOldSquare.copy(), c, nt)
+
+    #calculate the error at the last timestep for different Courant numbers
+    phiFTBScourant = np.zeros(41)
+    phiBTCScourant = np.zeros(41)
+    phiCTCScourant = np.zeros(41)
+    phiSLcourant = np.zeros(41)
+    courantnumber = np.linspace(-2, 2, 41)
+    for i in range(41):
+        phiFTBS, errorFTBS = FTBS(phiExact, phiOld.copy(), courantnumber[i], nt)
+        phiBTCS, errorBTCS = BTCS(phiExact, phiOld.copy(), courantnumber[i], nt)
+        phiCTCS, errorCTCS = CTCS(phiExact, phiOld.copy(), courantnumber[i], nt)
+        phiSL, errorSL = SL(phiExact, phiOld.copy(), courantnumber[i], nt)
+
+        phiFTBScourant[i]=errorFTBS[(nt-2)]
+        phiBTCScourant[i]=errorBTCS[(nt-2)]
+        phiCTCScourant[i]=errorCTCS[(nt-2)]
+        phiSLcourant[i]=errorSL[(nt-2)]
 
     # Calculate and print out error norms
-    print("FTCS l2 error norm = ", l2ErrorNorm(phiFTCS, phiAnalytic))
-    print("FTCS linf error norm = ", lInfErrorNorm(phiFTCS, phiAnalytic))
+    print("FTCS l2 error norm = ", l2ErrorNorm(phiFTBS, phiAnalytic))
+    print("FTCS linf error norm = ", lInfErrorNorm(phiFTBS, phiAnalytic))
 
-    # Plot the solutions
+    # Plot the solutions, to give an advection plot for the square wave
     font = {'size'   : 20}
     plt.rc('font', **font)
     plt.figure(1)
     plt.clf()
     plt.ion()
+    plt.plot(x, phiOldSquare, label='Initial', color='black')
+    plt.plot(x, phiAnalyticSquare, label='Analytic', color='black',
+             linestyle='--', linewidth=2)
+    #plt.plot(x, phiFTBSSquare, label='FTBS', color='blue')
+    #plt.plot(x, phiCTCSSquare, label='CTCS', color='red')
+    plt.plot(x, phiBTCSSquare, label='BTCS', color='orange')
+    plt.plot(x, phiSLSquare, label='SL', color='green')
+    plt.axhline(0, linestyle=':', color='black')
+    plt.ylim([-0.2,1.2])
+    plt.legend()
+    #plt.legend(bbox_to_anchor=(0.6 , 0.6))
+    plt.xlabel('$x$')
+    input('press return to save file and continue')
+    plt.savefig('BTCSSLSquare.pdf')
+
+    #Plot the solutions, to give an advection plot for the Bell curve
+    plt.figure(2)
     plt.plot(x, phiOld, label='Initial', color='black')
     plt.plot(x, phiAnalytic, label='Analytic', color='black',
              linestyle='--', linewidth=2)
-    plt.plot(x, phiFTCS, label='BTCS', color='blue')
+    #plt.plot(x, phiFTBS, label='FTBS', color='blue')
+    #plt.plot(x, phiCTCS, label='CTCS', color='red')
+    plt.plot(x, phiBTCS, label='BTCS', color='orange')
+    plt.plot(x, phiSL, label='SL', color='green')
     plt.axhline(0, linestyle=':', color='black')
     plt.ylim([-0.2,1.2])
-    plt.legend(bbox_to_anchor=(1.15 , 1.1))
+    plt.legend()
+    #plt.legend(bbox_to_anchor=(0.6 , 0.6))
     plt.xlabel('$x$')
-    input('press return to save file and continue')
-    plt.savefig('SL.pdf')
+    plt.savefig('BTCSSL.pdf')
 
-### Run the function main defined in this file                      ###
+    #Plot the errors against the time steps
+    plt.figure(3)
+    #plt.plot(errorFTBSSquare, label='error of FTBS', color='blue')
+    #plt.plot(errorCTCSSquare, label='error of CTCS', color='red')
+    plt.plot(errorBTCSSquare, label='error of BTCS', color='orange')
+    plt.plot(errorSLSquare, label='error of SL', color='green')
+    plt.legend()
+    plt.xlabel('$t$')
+    plt.ylabel('error')
+    plt.savefig('errorBTCSSLSquare.pdf')
+
+    #Plot the errors agains the Courant number
+    plt.figure(4)
+    plt.plot(courantnumber, phiBTCScourant, label='error of BTCS', color='orange')
+    plt.plot(courantnumber, phiSLcourant, label='error of SL', color='green')
+    plt.legend()
+    plt.xlabel('$c$')
+    plt.ylabel('error')
+    plt.xlim([-2,2])
+    plt.savefig('couranterrorBTCSSL.pdf')
+
+    #plot the log of errors against the Courant numbers
+    plt.figure(5)
+    plt.plot(courantnumber, phiFTBScourant, label='error of FTBS', color='blue')
+    plt.plot(courantnumber, phiCTCScourant, label='error of CTCS', color='red')
+    plt.legend()
+    plt.yscale("log")
+    plt.xlabel('$c$')
+    plt.ylabel('error')
+    plt.xlim([-2,2])
+    plt.savefig('couranterrorFTBSCTCS.pdf')
+
 main()

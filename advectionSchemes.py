@@ -1,6 +1,8 @@
-# The numpy package for numerical functions and pi
+# The numpy package for numerical functions and pi\
 import numpy as np
 from math import floor
+from initialConditions import *
+from diagnostics import *
 
 def FTCS(phiOld, c, nt):
     "Linear advection of profile in phiOld using FTCS, Courant number c"
@@ -24,12 +26,12 @@ def FTCS(phiOld, c, nt):
 
     return phi
 
-def FTBS(phiOld, c, nt):
+def FTBS(phiExact, phiOld, c, nt):
     "Linear advection of profile in phiOld using FTBS, Courant number c"
     "for nt time-steps"
 
     nx = len(phiOld)
-
+    error = np.zeros(nt, dtype=np.float)
     # new time-step array for phi
     phi = phiOld.copy()
 
@@ -40,18 +42,18 @@ def FTBS(phiOld, c, nt):
         for j in range(nx):
             phi[j] = phiOld[j] - c*\
                      (phiOld[j] - phiOld[j-1])
-
+        error[it]=l2ErrorNorm(phi, phiExact[it])
         # update arrays for next time-step
         phiOld = phi.copy()
 
-    return phi
+    return phi, error
 
-def CTCS(phiOld, c, nt):
+def CTCS(phiExact, phiOld, c, nt):
     "Linear advection of profile in phiOld using CTCS, Courant number c"
     "for nt time-steps"
 
     nx = len(phiOld)
-
+    error = np.zeros(nt, dtype=np.float)
     # new time-step array for phi
     phi = phiOld.copy()
     prevphiOld = phi.copy()
@@ -63,18 +65,19 @@ def CTCS(phiOld, c, nt):
         for j in range(nx):
             phi[j] = prevphiOld[j] - c*\
                      (phiOld[(j+1)%nx] - phiOld[(j-1)%nx])
-
+        error[it]=l2ErrorNorm(phi, phiExact[it])
         # update arrays for next time-step
         prevphiOld=phiOld.copy()
         phiOld = phi.copy()
 
-    return phi
+    return phi, error
 
-def BTCS(phiOld, c, nt):
+def BTCS(phiExact, phiOld, c, nt):
     "Linear advection of profile in phiOld using CTCS, Courant number c"
     "for nt time-steps"
 
     nx = len(phiOld)
+    error = np.zeros(nt, dtype=np.float)
     matrix= np.zeros((nx,nx), dtype=np.float) #initialise matrix as 0
     for j in range(nx): #define matrix such that Matrix*phi(n+1)=phi(n)
         matrix[j][j]=1
@@ -86,10 +89,11 @@ def BTCS(phiOld, c, nt):
     # BTCS for each time-step
     for j in range(nt):
         phi = np.linalg.solve(matrix, phiOld) #this would be the same as phi = inversematrix@phiOld, but is less expensive than inverting matrix M
+        error[j]=l2ErrorNorm(phi, phiExact[j])
         # update arrays for next time-step
         phiOld = phi.copy()
 
-    return phi
+    return phi, error
 
 def CLI(beta, phi, k): #cubic lagrangian interpolation where f(x)=phi[x]
     nx= len(phi)
@@ -97,11 +101,12 @@ def CLI(beta, phi, k): #cubic lagrangian interpolation where f(x)=phi[x]
         1/2*(1+beta)*beta*(2-beta)*phi[(k+1)%nx]-1/6*(1+beta)*beta*(1-beta)*phi[(k+2)%nx]
     return phiNewj
 
-def SL(phiOld, c, nt):
+def SL(phiExact, phiOld, c, nt):
     "Linear advection of profile in puiOld using Semi-Lagrangian, courant number c"
     "for nt time-steps"
 
     nx = len(phiOld)
+    error = np.zeros(nt, dtype=np.float)
     phi= phiOld.copy()
     #Semi Legrangian for each time-step
     for t in range(nt):
@@ -109,5 +114,6 @@ def SL(phiOld, c, nt):
             k = floor(j-c) %nx
             beta = (j-c-k)%nx
             phi[j] = CLI(beta,phiOld,k) #Lagrangian interpolation using x_(k-1),x_k,x_(k+1),x_(k+2)
+        error[t]=l2ErrorNorm(phi, phiExact[t])
         phiOld=phi.copy()
-    return phi
+    return phi, error
