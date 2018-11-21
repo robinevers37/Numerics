@@ -55,11 +55,13 @@ def CTCS(phiExact, phiOld, c, nt):
     nx = len(phiOld)
     error = np.zeros(nt, dtype=np.float)
     # new time-step array for phi
+    prevphiOld = phiOld.copy()
+    phiOld, ftbserror = FTBS(phiExact, phiOld, c, 1)
     phi = phiOld.copy()
-    prevphiOld = phi.copy()
+    error[0]=ftbserror[0]
 
     # CTCS for each time-step
-    for it in range(nt):
+    for it in range(1, nt):
         # Loop through all space using remainder after division (%)
         # to cope with periodic boundary conditions
         for j in range(nx):
@@ -73,7 +75,7 @@ def CTCS(phiExact, phiOld, c, nt):
     return phi, error
 
 def BTCS(phiExact, phiOld, c, nt):
-    "Linear advection of profile in phiOld using CTCS, Courant number c"
+    "Linear advection of profile in phiOld using BTCS, Courant number c"
     "for nt time-steps"
 
     nx = len(phiOld)
@@ -102,7 +104,7 @@ def CLI(beta, phi, k): #cubic lagrangian interpolation where f(x)=phi[x]
     return phiNewj
 
 def SL(phiExact, phiOld, c, nt):
-    "Linear advection of profile in puiOld using Semi-Lagrangian, courant number c"
+    "Linear advection of profile in phiOld using Semi-Lagrangian, courant number c"
     "for nt time-steps"
 
     nx = len(phiOld)

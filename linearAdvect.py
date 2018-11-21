@@ -55,15 +55,15 @@ def main():
     phiSLcourant = np.zeros(41)
     courantnumber = np.linspace(-2, 2, 41)
     for i in range(41):
-        phiFTBS, errorFTBS = FTBS(phiExact, phiOld.copy(), courantnumber[i], nt)
-        phiBTCS, errorBTCS = BTCS(phiExact, phiOld.copy(), courantnumber[i], nt)
-        phiCTCS, errorCTCS = CTCS(phiExact, phiOld.copy(), courantnumber[i], nt)
-        phiSL, errorSL = SL(phiExact, phiOld.copy(), courantnumber[i], nt)
+        cphiFTBS, cerrorFTBS = FTBS(phiExact, phiOld.copy(), courantnumber[i], nt)
+        cphiBTCS, cerrorBTCS = BTCS(phiExact, phiOld.copy(), courantnumber[i], nt)
+        cphiCTCS, cerrorCTCS = CTCS(phiExact, phiOld.copy(), courantnumber[i], nt)
+        cphiSL, cerrorSL = SL(phiExact, phiOld.copy(), courantnumber[i], nt)
 
-        phiFTBScourant[i]=errorFTBS[(nt-2)]
-        phiBTCScourant[i]=errorBTCS[(nt-2)]
-        phiCTCScourant[i]=errorCTCS[(nt-2)]
-        phiSLcourant[i]=errorSL[(nt-2)]
+        phiFTBScourant[i]=cerrorFTBS[(nt-2)]
+        phiBTCScourant[i]=cerrorBTCS[(nt-2)]
+        phiCTCScourant[i]=cerrorCTCS[(nt-2)]
+        phiSLcourant[i]=cerrorSL[(nt-2)]
 
     # Calculate and print out error norms
     print("FTCS l2 error norm = ", l2ErrorNorm(phiFTBS, phiAnalytic))
@@ -96,7 +96,7 @@ def main():
     plt.plot(x, phiAnalytic, label='Analytic', color='black',
              linestyle='--', linewidth=2)
     #plt.plot(x, phiFTBS, label='FTBS', color='blue')
-    #plt.plot(x, phiCTCS, label='CTCS', color='red')
+    plt.plot(x, phiCTCS, label='CTCS', color='red')
     plt.plot(x, phiBTCS, label='BTCS', color='orange')
     plt.plot(x, phiSL, label='SL', color='green')
     plt.axhline(0, linestyle=':', color='black')
@@ -104,7 +104,7 @@ def main():
     plt.legend()
     #plt.legend(bbox_to_anchor=(0.6 , 0.6))
     plt.xlabel('$x$')
-    plt.savefig('BTCSSL.pdf')
+    plt.savefig('CTCSBTCSSL.pdf')
 
     #Plot the errors against the time steps
     plt.figure(3)
