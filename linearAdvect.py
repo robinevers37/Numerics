@@ -19,7 +19,7 @@ def main():
     # Derived parameters
     dx = (xmax - xmin)/nx
 
-    # spatial points for plotting and for defining initial conditions
+    # Spatial points for plotting and for defining initial conditions
     x = np.arange(xmin, xmax, dx)
 
     # Initial conditions
@@ -48,7 +48,7 @@ def main():
     phiCTCSSquare, errorCTCSSquare = CTCS(phiExactSquare, phiOldSquare.copy(), c, nt)
     phiSLSquare, errorSLSquare = SL(phiExactSquare, phiOldSquare.copy(), c, nt)
 
-    #calculate the error at the last timestep for different Courant numbers
+    # Calculate the error at the last timestep for different Courant numbers
     phiFTBScourant = np.zeros(41)
     phiBTCScourant = np.zeros(41)
     phiCTCScourant = np.zeros(41)
@@ -90,12 +90,12 @@ def main():
     input('press return to save file and continue')
     plt.savefig('BTCSSLSquare.pdf')
 
-    #Plot the solutions, to give an advection plot for the Bell curve
+    # Plot the solutions, to give an advection plot for the Bell curve
     plt.figure(2)
     plt.plot(x, phiOld, label='Initial', color='black')
     plt.plot(x, phiAnalytic, label='Analytic', color='black',
              linestyle='--', linewidth=2)
-    #plt.plot(x, phiFTBS, label='FTBS', color='blue')
+    plt.plot(x, phiFTBS, label='FTBS', color='blue')
     plt.plot(x, phiCTCS, label='CTCS', color='red')
     plt.plot(x, phiBTCS, label='BTCS', color='orange')
     plt.plot(x, phiSL, label='SL', color='green')
@@ -104,9 +104,9 @@ def main():
     plt.legend()
     #plt.legend(bbox_to_anchor=(0.6 , 0.6))
     plt.xlabel('$x$')
-    plt.savefig('CTCSBTCSSL.pdf')
+    plt.savefig('FTBSCTCSBTCSSL.pdf')
 
-    #Plot the errors against the time steps
+    # Plot the errors against the time steps for initial square wave
     plt.figure(3)
     #plt.plot(errorFTBSSquare, label='error of FTBS', color='blue')
     #plt.plot(errorCTCSSquare, label='error of CTCS', color='red')
@@ -115,10 +115,21 @@ def main():
     plt.legend()
     plt.xlabel('$t$')
     plt.ylabel('error')
-    plt.savefig('errorBTCSSLSquare.pdf')
+    plt.savefig('errorBTCSSLSquare.pdf')    #Plot the errors against the time steps
 
-    #Plot the errors agains the Courant number
+    # Plot the errors against the time steps for initial Bell curve
     plt.figure(4)
+    plt.plot(errorFTBS, label='error of FTBS', color='blue')
+    plt.plot(errorCTCS, label='error of CTCS', color='red')
+    #plt.plot(errorBTCSSquare, label='error of BTCS', color='orange')
+    #plt.plot(errorSLSquare, label='error of SL', color='green')
+    plt.legend()
+    plt.xlabel('$t$')
+    plt.ylabel('error')
+    plt.savefig('errorFTBSCTCS.pdf')
+
+    # Plot the errors agains the Courant number
+    plt.figure(5)
     plt.plot(courantnumber, phiBTCScourant, label='error of BTCS', color='orange')
     plt.plot(courantnumber, phiSLcourant, label='error of SL', color='green')
     plt.legend()
@@ -127,8 +138,8 @@ def main():
     plt.xlim([-2,2])
     plt.savefig('couranterrorBTCSSL.pdf')
 
-    #plot the log of errors against the Courant numbers
-    plt.figure(5)
+    # Plot the log of errors against the Courant numbers
+    plt.figure(6)
     plt.plot(courantnumber, phiFTBScourant, label='error of FTBS', color='blue')
     plt.plot(courantnumber, phiCTCScourant, label='error of CTCS', color='red')
     plt.legend()

@@ -42,6 +42,7 @@ def FTBS(phiExact, phiOld, c, nt):
         for j in range(nx):
             phi[j] = phiOld[j] - c*\
                      (phiOld[j] - phiOld[j-1])
+        # calculate l2 error between phi at time it and the exact solution
         error[it]=l2ErrorNorm(phi, phiExact[it])
         # update arrays for next time-step
         phiOld = phi.copy()
@@ -67,6 +68,7 @@ def CTCS(phiExact, phiOld, c, nt):
         for j in range(nx):
             phi[j] = prevphiOld[j] - c*\
                      (phiOld[(j+1)%nx] - phiOld[(j-1)%nx])
+        # calculate l2 error between phi at time it and the exact solution
         error[it]=l2ErrorNorm(phi, phiExact[it])
         # update arrays for next time-step
         prevphiOld=phiOld.copy()
@@ -91,6 +93,7 @@ def BTCS(phiExact, phiOld, c, nt):
     # BTCS for each time-step
     for j in range(nt):
         phi = np.linalg.solve(matrix, phiOld) #this would be the same as phi = inversematrix@phiOld, but is less expensive than inverting matrix M
+        # calculate l2 error between phi at time j and the exact solution
         error[j]=l2ErrorNorm(phi, phiExact[j])
         # update arrays for next time-step
         phiOld = phi.copy()
@@ -110,12 +113,14 @@ def SL(phiExact, phiOld, c, nt):
     nx = len(phiOld)
     error = np.zeros(nt, dtype=np.float)
     phi= phiOld.copy()
-    #Semi Legrangian for each time-step
+
+    # Semi Legrangian for each time-step
     for t in range(nt):
         for j in range(nx):
             k = floor(j-c) %nx
             beta = (j-c-k)%nx
             phi[j] = CLI(beta,phiOld,k) #Lagrangian interpolation using x_(k-1),x_k,x_(k+1),x_(k+2)
+        # calculate l2 error between phi at time t and the exact solution
         error[t]=l2ErrorNorm(phi, phiExact[t])
         phiOld=phi.copy()
     return phi, error
